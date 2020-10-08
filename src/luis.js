@@ -1,5 +1,5 @@
 const { LuisRecognizer } = require('botbuilder-ai');
-const { ActivityHandler } = require('botbuilder');
+const { ActivityHandler, ActionTypes, ActivityTypes, CardFactory } = require('botbuilder');
 
 const HelpDialogs = require('./dialogs/help-dialogs.js');
 const GreatDialogs = require('./dialogs/great-dialogs.js');
@@ -23,14 +23,10 @@ class Luis extends ActivityHandler {
       const recognizerResult = await this.dispatchRecognizer.recognize(context);
       const intent = LuisRecognizer.topIntent(recognizerResult);
       if (intent === 'search') {
+        await context.sendActivity('Ok, por favor aguarde um segundo enquanto eu procuro 😄');
         await this.searchAtAPI(context.activity.text);
-        for (let i = 0; i < 5; i++) {
-          const { name, price, author } = this.books[i];
-          await context.sendActivity(`
-            Nome: ${name}
-            Autor: ${author.split(',').reverse().join(' ')}
-            Preço: ${price}
-          `);
+        for (let index = 0; index < 5; index++) {
+          await this.sendResponse(context, index);
         }
       }
       this.getIntent(context, intent);
@@ -39,9 +35,30 @@ class Luis extends ActivityHandler {
   }
 
   async searchAtAPI(data) {
+    let query = data.split(' ').reverse().join(' ');
     const searchBooks = new SearchBooks();
-    const { data: { books } } = await searchBooks.search(data);
+    const { data: { books } } = await searchBooks.search(query);
     this.books = books;
+  }
+
+  async sendResponse(context, index) {
+    const { name, price, author, image } = this.books[index];
+    const reply = { type: ActivityTypes.Message };
+    reply.text = `
+      Nome: ${name}
+      Autor: ${author.split(',').reverse().join(' ')}
+      Preço: ${price}
+    `;
+    reply.attachments = [this.getInternetAttachment(image)];
+    await context.sendActivity(reply);
+  }
+
+  getInternetAttachment(image) {
+    return {
+      name: 'architecture-resize.jpg',
+      contentType: 'image/jpg',
+      contentUrl: image
+    };
   }
   
   async getIntent(context, intent) {
@@ -50,16 +67,15 @@ class Luis extends ActivityHandler {
         break;
       case 'great':
         const greatDialogs = new GreatDialogs(context);
-        greatDialogs.great()
-
+        await greatDialogs.great()
         break;
       case 'about-me':
         const aboutMeDialogs = new AboutMeDialogs(context);
-        aboutMeDialogs.about();
+        await aboutMeDialogs.about();
         break;
       case 'help':
         const helpDialogs = new HelpDialogs(context);
-        helpDialogs.help();
+        await helpDialogs.help();
         break;
       default:
         context.sendActivity('Desculpa eu não consegui entender, você poderia reformular a frase? 😅');
@@ -67,4 +83,4 @@ class Luis extends ActivityHandler {
   }
 }
 
-module.exports = Luis
+module.exports = Luis;
