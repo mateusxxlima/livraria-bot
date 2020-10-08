@@ -4,15 +4,7 @@ class AboutMeDialogs {
   }
 
   about() {
-    this.context.sendActivity(`
-      Então, eu sou um Chat Bot 😃
-      Sou uma inteligência artificial e
-      estou aqui para te ajudar 😉
-      Neste projeto trabalho para
-      ajudar as pessoas a comprarem livros 📚
-      Fui programado por Mateus Lima
-      no projeto de uma POC, na empresa Compasso.
-    `)
+    this.context.sendActivity('Então, eu sou o Bot bibliotecário 🤓 !!! E estou aqui para te ajudar a comprar livros 📚 !!! Fui programado por Mateus Lima no projeto de uma POC, na empresa Compasso')
   }
 }
 

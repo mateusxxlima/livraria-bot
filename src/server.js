@@ -1,9 +1,9 @@
 const restify = require('restify');
-const { BotFrameworkAdapter, MemoryStorage, UserState, ConversationState } = require('botbuilder');
+const { BotFrameworkAdapter } = require('botbuilder');
 const Luis = require('./luis');
 require('dotenv').config();
 
-const port = process.env.PORT || process.env.port || 3000;
+const port =  process.env.port || process.env.PORT || 3978;
 const server = restify.createServer();
 const adapter = new BotFrameworkAdapter({
   appId: process.env.MicrosoftAppId,
@@ -18,8 +18,8 @@ adapter.onTurnError = async (context, error) => {
     'https://www.botframework.com/schemas/error',
     'TurnError'
   );
-  await context.sendActivity('Ops, parece que algo saiu errado 😅');
-  await context.sendActivity('Você poderia tentar novamente? 😄');
+  await context.sendActivity('Ops, parece que algo saiu errado 🤦‍♂️');
+  await context.sendActivity('Você poderia tentar novamente? 😅');
 };
 
 const luis = new Luis();

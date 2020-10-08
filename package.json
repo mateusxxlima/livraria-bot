@@ -5,8 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +15,6 @@
     "botbuilder": "^4.10.3",
     "botbuilder-ai": "^4.10.3",
     "dotenv": "^8.2.0",
-    "nodemon": "^2.0.4",
     "restify": "^8.5.1"
   }
 }

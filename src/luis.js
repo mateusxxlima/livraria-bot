@@ -1,5 +1,5 @@
 const { LuisRecognizer } = require('botbuilder-ai');
-const { ActivityHandler, ActionTypes, ActivityTypes, CardFactory } = require('botbuilder');
+const { ActivityHandler, ActivityTypes } = require('botbuilder');
 
 const HelpDialogs = require('./dialogs/help-dialogs.js');
 const GreatDialogs = require('./dialogs/great-dialogs.js');
@@ -14,9 +14,9 @@ class Luis extends ActivityHandler {
     this.books = [];
 
     this.dispatchRecognizer = new LuisRecognizer({
-      applicationId: process.env.LuisAppId,
-      endpointKey: process.env.LuisAPIKey,
-      endpoint:process.env.LuisAPIHostName
+      applicationId: '51f0e64c-f63c-4259-b51a-5923aacd3c29',
+      endpointKey: '5684d3ce4328443b8eb12bb22628bcf7',
+      endpoint: 'https://luisteste.cognitiveservices.azure.com/'
     }, true);
 
     this.onMessage(async (context, next) => {
@@ -25,7 +25,7 @@ class Luis extends ActivityHandler {
       if (intent === 'search') {
         await context.sendActivity('Ok, por favor aguarde um segundo enquanto eu procuro 😄');
         await this.searchAtAPI(context.activity.text);
-        for (let index = 0; index < 5; index++) {
+        for (let index = 0; index < 4; index++) {
           await this.sendResponse(context, index);
         }
       }
@@ -38,24 +38,28 @@ class Luis extends ActivityHandler {
     let query = data.split(' ').reverse().join(' ');
     const searchBooks = new SearchBooks();
     const { data: { books } } = await searchBooks.search(query);
+    books.length = 4;
     this.books = books;
   }
 
   async sendResponse(context, index) {
-    const { name, price, author, image } = this.books[index];
+    let { name, price, author, image } = this.books[index];
     const reply = { type: ActivityTypes.Message };
-    reply.text = `
-      Nome: ${name}
-      Autor: ${author.split(',').reverse().join(' ')}
-      Preço: ${price}
-    `;
+    author = author.split(',').reverse().join(' ')
+    reply.text = `Livro: ${++index}  👇👇👇👇`;
     reply.attachments = [this.getInternetAttachment(image)];
     await context.sendActivity(reply);
+    await context.sendActivity(name);
+    await context.sendActivity(`
+      Autor: ${author || 'Não encontrado'}
+      Preço: ${price}
+    `);
+    await context.sendActivity('📕     -=-     -=-     📔     -=-     -=-     📘');
   }
 
   getInternetAttachment(image) {
     return {
-      name: 'architecture-resize.jpg',
+      name: ' ',
       contentType: 'image/jpg',
       contentUrl: image
     };
