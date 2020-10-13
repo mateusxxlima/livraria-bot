@@ -3,8 +3,8 @@ class GreatDialogs {
     this.context = context;
   }
 
-  great() {
-    this.context.sendActivity(`
+  async great() {
+    await this.context.sendActivity(`
       Olá tudo bem? Em que posso ajudar?
       
       Tente dizer: 

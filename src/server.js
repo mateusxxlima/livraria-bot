@@ -1,14 +1,22 @@
 const restify = require('restify');
-const { BotFrameworkAdapter } = require('botbuilder');
+const path = require('path');
+const { BotFrameworkAdapter, MemoryStorage, ConversationState, UserState } = require('botbuilder');
 const Luis = require('./luis');
-require('dotenv').config();
+
+const ENV_FILE = path.join(__dirname, '../.env');
+require('dotenv').config({ path: ENV_FILE });
 
 const port =  process.env.port || process.env.PORT || 3978;
 const server = restify.createServer();
+
 const adapter = new BotFrameworkAdapter({
   appId: process.env.MicrosoftAppId,
   appPassword: process.env.MicrosoftAppPassword
 })
+
+const memoryStorage = new MemoryStorage();
+const conversationState = new ConversationState(memoryStorage);
+const userState = new UserState(memoryStorage);
 
 adapter.onTurnError = async (context, error) => {
   console.error(`\n [onTurnError] unhandled error: ${error}`);
@@ -22,7 +30,7 @@ adapter.onTurnError = async (context, error) => {
   await context.sendActivity('Você poderia tentar novamente? 😅');
 };
 
-const luis = new Luis();
+const luis = new Luis(conversationState, userState);
 
 server.post('/api/messages', (req, res) => {
   adapter.processActivity(req, res, async (context) => {

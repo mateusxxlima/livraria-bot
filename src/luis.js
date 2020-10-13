@@ -1,17 +1,23 @@
+const { ActivityHandler } = require('botbuilder');
 const { LuisRecognizer } = require('botbuilder-ai');
-const { ActivityHandler, ActivityTypes } = require('botbuilder');
 
 const HelpDialogs = require('./dialogs/help-dialogs.js');
 const GreatDialogs = require('./dialogs/great-dialogs.js');
 const AboutMeDialogs = require('./dialogs/about-me-dialogs.js');
+const SearchDialogs = require('./dialogs/search-dialogs');
 
-const SearchBooks = require('./API/search-books-api');
+const CONVERSATION_DATA_PROPERTY = 'conversationData';
+const USER_PROFILE_PROPERTY = 'userProfile';
 
 class Luis extends ActivityHandler {
 
-  constructor() {
+  constructor(conversationState, userState) {
     super();
-    this.books = [];
+    this.topIntent = '';
+    this.conversationDataAccessor = conversationState.createProperty(CONVERSATION_DATA_PROPERTY);
+    this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);
+    this.conversationState = conversationState;
+    this.userState = userState;
 
     this.dispatchRecognizer = new LuisRecognizer({
       applicationId: '51f0e64c-f63c-4259-b51a-5923aacd3c29',
@@ -21,57 +27,22 @@ class Luis extends ActivityHandler {
 
     this.onMessage(async (context, next) => {
       const recognizerResult = await this.dispatchRecognizer.recognize(context);
-      const intent = LuisRecognizer.topIntent(recognizerResult);
-      if (intent === 'search') {
-        await context.sendActivity('Ok, por favor aguarde um segundo enquanto eu procuro 😄');
-        await this.searchAtAPI(context.activity.text);
-        for (let index = 0; index < 4; index++) {
-          await this.sendResponse(context, index);
-        }
-      }
-      this.getIntent(context, intent);
+      this.topIntent = LuisRecognizer.topIntent(recognizerResult);
+      await this.intentiesSwitch(context);
       await next();
     });
   }
 
-  async searchAtAPI(data) {
-    let query = data.split(' ').reverse().join(' ');
-    const searchBooks = new SearchBooks();
-    const { data: { books } } = await searchBooks.search(query);
-    books.length = 4;
-    this.books = books;
-  }
 
-  async sendResponse(context, index) {
-    let { name, price, author, image } = this.books[index];
-    const reply = { type: ActivityTypes.Message };
-    author = author.split(',').reverse().join(' ')
-    reply.text = `Livro: ${++index}  👇👇👇👇`;
-    reply.attachments = [this.getInternetAttachment(image)];
-    await context.sendActivity(reply);
-    await context.sendActivity(name);
-    await context.sendActivity(`
-      Autor: ${author || 'Não encontrado'}
-      Preço: ${price}
-    `);
-    await context.sendActivity('📕     -=-     -=-     📔     -=-     -=-     📘');
-  }
-
-  getInternetAttachment(image) {
-    return {
-      name: ' ',
-      contentType: 'image/jpg',
-      contentUrl: image
-    };
-  }
-  
-  async getIntent(context, intent) {
-    switch (intent) {
+  async intentiesSwitch(context) {
+    switch (this.topIntent) {
       case 'search':
+        const searchDialogs = new SearchDialogs();
+        await searchDialogs.search(context, this.conversationDataAccessor);
         break;
       case 'great':
         const greatDialogs = new GreatDialogs(context);
-        await greatDialogs.great()
+        await greatDialogs.great();
         break;
       case 'about-me':
         const aboutMeDialogs = new AboutMeDialogs(context);
@@ -84,6 +55,12 @@ class Luis extends ActivityHandler {
       default:
         context.sendActivity('Desculpa eu não consegui entender, você poderia reformular a frase? 😅');
     }
+  }
+
+  async run(context) {
+    await super.run(context);
+    await this.conversationState.saveChanges(context, false);
+    await this.userState.saveChanges(context, false);
   }
 }
 
