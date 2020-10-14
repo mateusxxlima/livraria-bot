@@ -5,20 +5,27 @@ const HelpDialogs = require('./dialogs/help-dialogs.js');
 const GreatDialogs = require('./dialogs/great-dialogs.js');
 const AboutMeDialogs = require('./dialogs/about-me-dialogs.js');
 const SearchDialogs = require('./dialogs/search-dialogs');
+const SearchBooks = require('./API/search-books-api');
 
 const CONVERSATION_DATA_PROPERTY = 'conversationData';
 const USER_PROFILE_PROPERTY = 'userProfile';
 
-class Luis extends ActivityHandler {
+class Bot extends ActivityHandler {
 
   constructor(conversationState, userState) {
     super();
+    this.books = [];
     this.topIntent = '';
     this.conversationDataAccessor = conversationState.createProperty(CONVERSATION_DATA_PROPERTY);
     this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);
     this.conversationState = conversationState;
     this.userState = userState;
 
+    this.searchBooks = new SearchBooks();
+    this.searchDialogs = new SearchDialogs();
+    this.greatDialogs = new GreatDialogs();
+    this.helpDialogs = new HelpDialogs();
+    this.aboutMeDialogs = new AboutMeDialogs();
     this.dispatchRecognizer = new LuisRecognizer({
       applicationId: '51f0e64c-f63c-4259-b51a-5923aacd3c29',
       endpointKey: '5684d3ce4328443b8eb12bb22628bcf7',
@@ -28,29 +35,48 @@ class Luis extends ActivityHandler {
     this.onMessage(async (context, next) => {
       const recognizerResult = await this.dispatchRecognizer.recognize(context);
       this.topIntent = LuisRecognizer.topIntent(recognizerResult);
-      await this.intentiesSwitch(context);
       await next();
     });
-  }
 
+    this.onMessage(async (context, next) => {
+      const conversationData = await this.conversationDataAccessor.get(context, { books: [] });
+      if (this.topIntent === 'search') {
+        await context.sendActivity('Ok, por favor aguarde um segundo enquanto eu procuro 😄');
+        const books = await this.searchBooks.search(context);
+        conversationData.books.length = 0;
+        conversationData.books =  books;
+        this.books.length = 0;
+        for (let i = 0; i < 4; i++) {
+          this.books.push(conversationData.books.pop()); 
+        }
+      }
+      if (this.topIntent === 'pagination') {
+        this.books.length = 0;
+        for (let i = 0; i < 4; i++) {
+          this.books.push(conversationData.books.pop());
+        }
+      }
+      await this.intentiesSwitch(context);
+      next();
+    })
+  }
 
   async intentiesSwitch(context) {
     switch (this.topIntent) {
-      case 'search':
-        const searchDialogs = new SearchDialogs();
-        await searchDialogs.search(context, this.conversationDataAccessor);
+      case 'search':        
+        await this.searchDialogs.sendBooks(context, this.books);
+        break;
+      case 'pagination':
+        await this.searchDialogs.sendBooks(context, this.books);
         break;
       case 'great':
-        const greatDialogs = new GreatDialogs(context);
-        await greatDialogs.great();
+        await this.greatDialogs.great(context);
         break;
       case 'about-me':
-        const aboutMeDialogs = new AboutMeDialogs(context);
-        await aboutMeDialogs.about();
+        await this.aboutMeDialogs.about(context);
         break;
       case 'help':
-        const helpDialogs = new HelpDialogs(context);
-        await helpDialogs.help();
+        await this.helpDialogs.help(context);
         break;
       default:
         context.sendActivity('Desculpa eu não consegui entender, você poderia reformular a frase? 😅');
@@ -64,4 +90,4 @@ class Luis extends ActivityHandler {
   }
 }
 
-module.exports = Luis;
+module.exports = Bot;

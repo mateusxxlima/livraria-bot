@@ -1,7 +1,7 @@
 const restify = require('restify');
 const path = require('path');
 const { BotFrameworkAdapter, MemoryStorage, ConversationState, UserState } = require('botbuilder');
-const Luis = require('./luis');
+const Bot = require('./bot');
 
 const ENV_FILE = path.join(__dirname, '../.env');
 require('dotenv').config({ path: ENV_FILE });
@@ -30,11 +30,11 @@ adapter.onTurnError = async (context, error) => {
   await context.sendActivity('Você poderia tentar novamente? 😅');
 };
 
-const luis = new Luis(conversationState, userState);
+const bot = new Bot(conversationState, userState);
 
 server.post('/api/messages', (req, res) => {
   adapter.processActivity(req, res, async (context) => {
-    await luis.run(context);
+    await bot.run(context);
   });
 });
 

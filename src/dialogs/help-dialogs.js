@@ -1,10 +1,7 @@
 class HelpDialogs {
-  constructor(context) {
-    this.context = context;
-  }
 
-  async help() {
-    await this.context.sendActivity(`
+  async help(context) {
+    await context.sendActivity(`
       Tente dizer: 
       
       📕 Livros de romance 

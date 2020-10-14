@@ -1,10 +1,7 @@
 class GreatDialogs {
-  constructor(context) {
-    this.context = context;
-  }
 
-  async great() {
-    await this.context.sendActivity(`
+  async great(context) {
+    await context.sendActivity(`
       Olá tudo bem? Em que posso ajudar?
       
       Tente dizer: 
