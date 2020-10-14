@@ -2,6 +2,7 @@ const axios = require('axios');
 
 class SearchBooks {
   constructor() {
+    this.PAGINATION_MAX = 12;
     this.URL = 'https://livraria-compasso.glitch.me/api/search';
   }
 
@@ -17,12 +18,12 @@ class SearchBooks {
   }
 
   formatBooksArray({ data: { books } }) {
-    books.length = 12;
+    if (books.length > this.PAGINATION_MAX) books.length = this.PAGINATION_MAX;
     let booksWithNumber = books.map((book, index) => {
       book.number = ++ index;
       return book;
     })
-    booksWithNumber = books.reverse();
+    booksWithNumber = booksWithNumber.reverse();
     return booksWithNumber;
   }
 

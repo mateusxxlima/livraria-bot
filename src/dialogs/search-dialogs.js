@@ -2,7 +2,16 @@ const { ActivityTypes } = require('botbuilder');
 
 class SearchDialogs {
 
-  async sendBooks(context, books) {    
+  async sendBooks(context, books) {
+    if (books.length === 0) {
+      await context.sendActivity('Ops, você precisa fazer uma nova pesquisa... 🙃');
+      await context.sendActivity(`
+        Tente dizer:
+        - Quero um livro do Harry Potter (ou)
+        - Adicione o livro "1" ao meu carrinho
+      `)
+      return;
+    }
     for (const book of books) {
       await this.sendBook(context, book);
     }

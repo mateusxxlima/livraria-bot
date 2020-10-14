@@ -5,6 +5,7 @@ const HelpDialogs = require('./dialogs/help-dialogs.js');
 const GreatDialogs = require('./dialogs/great-dialogs.js');
 const AboutMeDialogs = require('./dialogs/about-me-dialogs.js');
 const SearchDialogs = require('./dialogs/search-dialogs');
+const GoodbyeDialogs = require('./dialogs/goodbye-dialogs');
 const SearchBooks = require('./API/search-books-api');
 
 const CONVERSATION_DATA_PROPERTY = 'conversationData';
@@ -26,6 +27,7 @@ class Bot extends ActivityHandler {
     this.greatDialogs = new GreatDialogs();
     this.helpDialogs = new HelpDialogs();
     this.aboutMeDialogs = new AboutMeDialogs();
+    this.goodbyeDialogs = new GoodbyeDialogs();
     this.dispatchRecognizer = new LuisRecognizer({
       applicationId: '51f0e64c-f63c-4259-b51a-5923aacd3c29',
       endpointKey: '5684d3ce4328443b8eb12bb22628bcf7',
@@ -47,12 +49,14 @@ class Bot extends ActivityHandler {
         conversationData.books =  books;
         this.books.length = 0;
         for (let i = 0; i < 4; i++) {
+          if (conversationData.books.length === 0) break;
           this.books.push(conversationData.books.pop()); 
         }
       }
       if (this.topIntent === 'pagination') {
         this.books.length = 0;
         for (let i = 0; i < 4; i++) {
+          if (conversationData.books.length === 0) break;
           this.books.push(conversationData.books.pop());
         }
       }
@@ -77,6 +81,9 @@ class Bot extends ActivityHandler {
         break;
       case 'help':
         await this.helpDialogs.help(context);
+        break;
+      case 'goodbye':
+        await this.goodbyeDialogs.bye(context);
         break;
       default:
         context.sendActivity('Desculpa eu não consegui entender, você poderia reformular a frase? 😅');
