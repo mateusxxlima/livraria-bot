@@ -3,7 +3,7 @@ const axios = require('axios');
 class SearchBooks {
   constructor() {
     this.MAX_PAGINATION_SIZE = 12;
-    this.URL = 'https://livraria-compasso.glitch.me/api/search';
+    this.URL = process.env.URL_API;
   }
 
   async search({ activity: { text } }) {

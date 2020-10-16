@@ -16,7 +16,7 @@ class ShowCartDialogs {
     for (const book of books) {
       await this.sendBook(context, book);
     }
-    await context.sendActivity(`Valor total: R$${this.sunCart(books).toFixed(2)}`);
+    await context.sendActivity(`Valor total: R$ ${this.sunCart(books).toFixed(2)}`);
   }
 
   async sendBook(context, book) {
